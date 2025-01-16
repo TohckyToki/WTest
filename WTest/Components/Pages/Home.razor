@@ -1,0 +1,75 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<form>
+    <label>User <input type="text" id="user" /></label>
+    <br />
+    <label>Password <input type="password" id="password" /></label>
+    <br />
+    <input type="button" id="login" value="login" />
+</form>
+<div id="message"></div>
+<textarea rows="5" cols="30" id="input1" disabled></textarea>
+<br />
+<input type="text" id="input2" />
+<br />
+<input type="button" id="send" value="send" />
+
+<script>
+$("#login").click(() => {
+  $.ajax({
+    type: "POST",
+    url: "/api/Login",
+    data: {
+      user: $("#user").val(),
+      password: $("#password").val()
+    },
+    success: function (response) {
+      if (response) {
+        addWs()
+      }
+    }
+  });
+})
+
+function addWs() {
+  const addr = "http://" + location.host;
+  const socket = new WebSocket(addr);
+
+  // Event listener for when the connection is opened
+  socket.addEventListener('open', function (event) {
+    $("#message").text('Connected to the WebSocket server');
+  });
+
+  // Event listener for when a message is received from the server
+  socket.addEventListener('message', function (event) {
+    $("#message").text('Message received');
+    const input1 = $("#input1");
+    if (input1.val().length) {
+      input1.val(input1.val() + "\n" + event.data);
+    } else {
+      input1.val(event.data);
+    }
+    input1.scrollTop(input1[0].scrollHeight - input1.height());
+  });
+
+  // Event listener for when the connection is closed
+  socket.addEventListener('close', function () {
+    $("#message").text('Disconnected from the WebSocket server');
+  });
+
+  // Event listener for when an error occurs
+  socket.addEventListener('error', function (event) {
+    $("#message").text('WebSocket error:', event);
+  });
+
+  $("#send").click(() => {
+    if (socket.readyState == socket.OPEN) {
+      var value = $("#input2").val();
+      $("#input2").val("");
+      socket.send(value);
+    }
+  })
+}
+</script>
