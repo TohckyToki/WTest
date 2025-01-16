@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
+using Serilog;
+using System.Text;
 using WTest.Components;
 using WTest.Middlewares;
 using WTest.Services;
@@ -11,6 +13,12 @@ namespace WTest
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Add logger of Serilog.
+            var logger = new LoggerConfiguration()
+                .WriteTo.File(builder.Configuration["LogPath"]!, rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true, retainedFileCountLimit: 90, encoding: Encoding.UTF8)
+                .CreateLogger();
+            builder.Logging.AddSerilog(logger);
 
             // Add services to the container.
             builder.Services.AddRazorComponents();
